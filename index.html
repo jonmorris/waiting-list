@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>The Waiting List</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:        #f4efe5;
+      --parchment:    #faf7f1;
+      --card:         #fffdf9;
+      --border:       #ddd0b5;
+      --border-light: #ece4d2;
+      --ink:          #26190e;
+      --ink-2:        #5c4a35;
+      --ink-3:        #9a856d;
+      --ink-4:        #c4ae96;
+      --amber:        #b8712a;
+      --amber-bg:     #fdf3e3;
+      --amber-border: #e8c98a;
+      --olive:        #4e7040;
+      --olive-bg:     #eaf3e5;
+      --olive-border: #a8c99a;
+      --rust:         #8f3d28;
+      --rust-bg:      #faeae5;
+      --rust-border:  #d4967a;
+      --serif: Georgia, 'Times New Roman', Times, serif;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+      --radius: 4px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ─── Header ─── */
+    .site-header {
+      background: var(--ink);
+      color: var(--parchment);
+      padding: 28px 24px 24px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 3px solid var(--amber);
+    }
+
+    .site-title {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: normal;
+      letter-spacing: 0.05em;
+      color: var(--parchment);
+      margin-bottom: 3px;
+    }
+
+    .site-tagline {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 18px;
+    }
+
+    /* ─── Nav ─── */
+    .nav {
+      display: inline-flex;
+      border: 1px solid #3a2e1e;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .nav-btn {
+      padding: 7px 20px;
+      background: none;
+      border: none;
+      color: var(--ink-3);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .nav-btn + .nav-btn { border-left: 1px solid #3a2e1e; }
+    .nav-btn:hover { color: var(--parchment); }
+    .nav-btn.active { background: var(--amber); color: var(--parchment); }
+
+    .nav-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px;
+      font-size: 10px;
+      margin-left: 5px;
+      font-weight: 700;
+    }
+
+    /* ─── Main ─── */
+    .main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 32px 16px 64px;
+    }
+
+    /* ─── Stats bar ─── */
+    .stats-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 28px;
+    }
+
+    .stat {
+      flex: 1;
+      padding: 14px 16px;
+      text-align: center;
+      border-right: 1px solid var(--border-light);
+    }
+
+    .stat:last-child { border-right: none; }
+
+    .stat-value {
+      font-family: var(--serif);
+      font-size: 22px;
+      color: var(--ink);
+      display: block;
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-3);
+    }
+
+    .stat.stat-saved .stat-value { color: var(--olive); }
+    .stat.stat-ready .stat-value { color: var(--amber); }
+    .stat.stat-net   .stat-value { color: var(--olive); }
+    .stat.stat-net.is-negative .stat-value { color: var(--rust); }
+    .stat.stat-net.is-negative .stat-label { color: var(--rust); }
+
+    .stat-detail {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--ink-3);
+      margin: -16px 0 6px;
+    }
+    .stat-detail strong { color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stat-detail-sep { color: var(--ink-4); }
+
+    .stat-breakdown {
+      text-align: center;
+      font-size: 11px;
+      color: var(--ink-4);
+      letter-spacing: 0.02em;
+      margin-bottom: 22px;
+    }
+
+    /* ─── Section headings ─── */
+    .section-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .section-head + .section-head { margin-top: 32px; }
+
+    .section-head-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--ink-3);
+      white-space: nowrap;
+    }
+
+    .section-head-line {
+      flex: 1;
+      height: 1px;
+      background: var(--border-light);
+    }
+
+    /* ─── Item cards ─── */
+    .item-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 10px;
+      transition: box-shadow 0.2s;
+      position: relative;
+    }
+
+    .item-card:hover { box-shadow: 0 2px 12px rgba(38,25,14,0.07); }
+
+    .item-card.is-ready {
+      border-left: 3px solid var(--olive);
+    }
+
+    .item-card.is-locked {
+      border-left: 3px solid var(--border);
+    }
+
+    /* ─── Item top row ─── */
+    .item-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .item-seal {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-3);
+      background: var(--cream);
+      transition: all 0.3s;
+    }
+
+    .item-card.is-ready .item-seal {
+      border-color: var(--olive-border);
+      background: var(--olive-bg);
+      color: var(--olive);
+    }
+
+    .item-main { flex: 1; min-width: 0; }
+
+    .item-name {
+      font-family: var(--serif);
+      font-size: 17px;
+      color: var(--ink);
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+
+    .item-card.is-locked .item-name { color: var(--ink-2); }
+
+    .item-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .item-price {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+
+    .item-category {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-3);
+      background: var(--cream);
+      border: 1px solid var(--border-light);
+      padding: 2px 7px;
+      border-radius: 2px;
+    }
+
+    /* ─── Progress bar ─── */
+    .item-progress-wrap {
+      margin-bottom: 10px;
+    }
+
+    .item-progress-track {
+      height: 3px;
+      background: var(--border-light);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .item-progress-fill {
+      height: 100%;
+      background: var(--amber);
+      border-radius: 2px;
+      transition: width 1s linear;
+    }
+
+    .item-time {
+      font-size: 12px;
+      color: var(--ink-3);
+      letter-spacing: 0.01em;
+    }
+
+    .item-time strong { color: var(--ink-2); font-weight: 600; }
+
+    .item-ready-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--olive);
+      letter-spacing: 0.02em;
+      margin-bottom: 10px;
+    }
+
+    .item-ready-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--olive);
+      flex-shrink: 0;
+    }
+
+    /* ─── Notes ─── */
+    .item-notes {
+      font-size: 13px;
+      color: var(--ink-3);
+      font-style: italic;
+      line-height: 1.5;
+      padding: 8px 0;
+      border-top: 1px solid var(--border-light);
+      margin-bottom: 10px;
+    }
+
+    .item-notes::before { content: '" '; }
+    .item-notes::after  { content: ' "'; }
+
+    /* ─── Item actions ─── */
+    .item-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .item-actions-right {
+      margin-left: auto;
+      display: flex;
+      gap: 6px;
+    }
+
+    .act-btn {
+      padding: 6px 13px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      font-family: var(--sans);
+      letter-spacing: 0.02em;
+      transition: all 0.14s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .act-buy {
+      background: var(--olive);
+      color: #fff;
+      border-color: var(--olive);
+    }
+    .act-buy:hover { background: #3d5c31; }
+
+    .act-snooze {
+      background: var(--parchment);
+      color: var(--ink-2);
+      border-color: var(--border);
+    }
+    .act-snooze:hover { border-color: var(--amber); color: var(--amber); }
+
+    .act-remove {
+      background: none;
+      color: var(--ink-4);
+      border-color: var(--border-light);
+    }
+    .act-remove:hover { color: var(--rust); border-color: var(--rust-border); background: var(--rust-bg); }
+
+    .act-url {
+      background: var(--amber-bg);
+      color: var(--amber);
+      border-color: var(--amber-border);
+    }
+    .act-url:hover { background: var(--amber); color: #fff; }
+
+    /* ─── Confirm inline ─── */
+    .confirm-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--rust-bg);
+      border: 1px solid var(--rust-border);
+      border-radius: var(--radius);
+      margin-top: 8px;
+    }
+
+    .confirm-inline-text {
+      font-size: 12px;
+      color: var(--ink-2);
+      flex: 1;
+    }
+
+    .confirm-yes {
+      padding: 4px 12px;
+      background: var(--rust);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--sans);
+    }
+
+    .confirm-no {
+      padding: 4px 12px;
+      background: none;
+      color: var(--ink-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: var(--sans);
+    }
+
+    .confirm-delete {
+      margin-left: auto;
+      padding: 4px 12px;
+      background: none;
+      color: var(--rust);
+      border: 1px solid var(--rust-border);
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--sans);
+      transition: all 0.15s;
+    }
+    .confirm-delete:hover {
+      background: var(--rust);
+      color: #fff;
+    }
+
+    /* ─── History ─── */
+    .history-card {
+      background: #faf6ee;
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .history-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .history-icon.bought   { background: var(--olive-bg); color: var(--olive); }
+    .history-icon.removed  { background: var(--rust-bg);  color: var(--rust); }
+    .history-icon.uncounted{ background: var(--cream);    color: var(--ink-3); }
+
+    .history-info { flex: 1; min-width: 0; }
+
+    .history-name {
+      font-family: var(--serif);
+      font-size: 14px;
+      color: var(--ink-2);
+      line-height: 1.3;
+      margin-bottom: 2px;
+    }
+
+    .history-meta {
+      font-size: 11px;
+      color: var(--ink-4);
+      letter-spacing: 0.02em;
+    }
+
+    .history-meta strong {
+      color: var(--ink-3);
+      font-weight: 600;
+    }
+
+    .history-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    .history-delete {
+      margin-left: auto;
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 4px;
+      border: none;
+      background: none;
+      color: var(--ink-4);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .history-delete:hover { color: var(--rust); background: var(--rust-bg); }
+    .history-delete svg { display: block; }
+
+    /* ─── Empty state ─── */
+    .empty {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--ink-3);
+    }
+
+    .empty-icon {
+      font-size: 32px;
+      margin-bottom: 14px;
+      opacity: 0.4;
+    }
+
+    .empty-title {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--ink-2);
+      margin-bottom: 6px;
+      font-weight: normal;
+    }
+
+    .empty-hint { font-size: 13px; }
+
+    /* ─── ADD FORM ─── */
+    .add-form {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+    }
+
+    .form-title {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: normal;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    .form-subtitle {
+      font-size: 12px;
+      color: var(--ink-3);
+      margin-bottom: 24px;
+      letter-spacing: 0.03em;
+    }
+
+    .form-rule {
+      height: 1px;
+      background: var(--border-light);
+      margin: 20px 0;
+    }
+
+    .field { margin-bottom: 20px; }
+
+    .field-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--ink-3);
+      margin-bottom: 7px;
+    }
+
+    .field-label span {
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 11px;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 10px 13px;
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: var(--sans);
+      font-size: 14px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+
+    .field-input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px var(--amber-bg); }
+    .field-input::placeholder { color: var(--ink-4); }
+    .field-input.error { border-color: var(--rust); }
+
+    textarea.field-input {
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.5;
+    }
+
+    /* Category pills */
+    .pill-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .pill {
+      padding: 7px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--parchment);
+      color: var(--ink-3);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: var(--sans);
+      transition: all 0.13s;
+    }
+
+    .pill:hover { border-color: var(--amber); color: var(--amber); }
+    .pill.selected { border-color: var(--amber); background: var(--amber-bg); color: var(--amber); font-weight: 600; }
+
+    /* Period selector */
+    .period-group { display: flex; gap: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+
+    .period-btn {
+      flex: 1;
+      padding: 10px 8px;
+      background: var(--parchment);
+      border: none;
+      border-right: 1px solid var(--border);
+      color: var(--ink-3);
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.13s;
+      text-align: center;
+    }
+
+    .period-btn:last-child { border-right: none; }
+    .period-btn:hover { color: var(--amber); }
+    .period-btn.selected { background: var(--amber); color: #fff; font-weight: 600; }
+
+    .period-sub {
+      display: block;
+      font-size: 10px;
+      font-weight: 400;
+      opacity: 0.75;
+      margin-top: 2px;
+    }
+
+    /* Submit */
+    .submit-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--ink);
+      color: var(--parchment);
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--serif);
+      font-size: 16px;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.15s;
+      margin-top: 8px;
+    }
+
+    .submit-btn:hover { background: var(--amber); }
+
+    /* ─── Edit modal ─── */
+    .edit-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .edit-overlay.hidden { display: none; }
+
+    .edit-modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: editIn 0.18s ease-out;
+    }
+
+    @keyframes editIn {
+      from { transform: translateY(8px); opacity: 0; }
+      to   { transform: none; opacity: 1; }
+    }
+
+    .edit-modal-head {
+      padding: 16px 20px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .edit-modal-title {
+      font-family: var(--serif);
+      font-size: 17px;
+      color: var(--ink);
+    }
+
+    .edit-modal-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: var(--cream);
+      color: var(--ink-3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .edit-modal-close:hover { color: var(--ink); background: var(--border); }
+
+    .edit-modal-body { padding: 16px 20px 20px; }
+
+    .edit-modal-foot {
+      padding: 12px 20px;
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .edit-btn {
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--parchment);
+      color: var(--ink-2);
+      font-family: var(--sans);
+      transition: all 0.12s;
+    }
+    .edit-btn:hover { border-color: var(--ink-3); color: var(--ink); }
+    .edit-btn.primary { background: var(--ink); color: var(--parchment); border-color: var(--ink); }
+    .edit-btn.primary:hover { background: var(--amber); border-color: var(--amber); }
+
+    /* ─── Available Funds ─── */
+    .funds-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+
+    .funds-header {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .funds-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--ink-3);
+    }
+
+    .funds-amount {
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .funds-amount.negative { color: var(--rust); }
+
+    .funds-detail {
+      font-size: 11px;
+      color: var(--ink-4);
+      margin-top: 6px;
+      line-height: 1.6;
+    }
+    .funds-detail strong { color: var(--ink-3); font-weight: 600; }
+
+    .funds-divider {
+      height: 1px;
+      background: var(--border-light);
+      margin: 14px 0;
+    }
+
+    .funds-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .funds-row-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-3);
+      min-width: 80px;
+    }
+
+    .funds-row + .funds-row { margin-top: 10px; }
+
+    .funds-inp {
+      width: 80px;
+      padding: 5px 8px;
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: var(--sans);
+      font-size: 13px;
+      color: var(--ink);
+      outline: none;
+      text-align: right;
+      -webkit-appearance: none;
+    }
+    .funds-inp:focus { border-color: var(--amber); }
+
+    .funds-btn {
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--parchment);
+      color: var(--ink-2);
+      cursor: pointer;
+      font-family: var(--sans);
+      transition: all 0.12s;
+    }
+    .funds-btn:hover { border-color: var(--amber); color: var(--amber); }
+    .funds-btn.add { color: var(--olive); }
+    .funds-btn.add:hover { border-color: var(--olive); }
+    .funds-btn.remove { color: var(--rust); }
+    .funds-btn.remove:hover { border-color: var(--rust); }
+
+    .funds-allowance-active {
+      font-size: 12px;
+      color: var(--olive);
+      font-weight: 600;
+    }
+
+    .funds-allowance-off {
+      font-size: 12px;
+      color: var(--ink-4);
+      font-style: italic;
+    }
+
+    /* ─── Toast ─── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--ink);
+      color: var(--parchment);
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 13px;
+      letter-spacing: 0.02em;
+      border-left: 3px solid var(--amber);
+      transition: transform 0.25s ease-out;
+      z-index: 500;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ─── Scrollbar ─── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: var(--cream); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 480px) {
+      .site-header { padding: 20px 16px 18px; }
+      .site-title { font-size: 19px; }
+      .add-form { padding: 20px 16px; }
+      .stat-value { font-size: 18px; }
+      .item-actions { flex-direction: column; align-items: flex-start; }
+      .item-actions-right { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="site-title">The Waiting List</div>
+    <div class="site-tagline">A ledger of considered purchases</div>
+    <nav class="nav">
+      <button class="nav-btn active" id="nav-list" onclick="setView('list')">
+        My List <span class="nav-count" id="nav-count" style="display:none"></span>
+      </button>
+      <button class="nav-btn" id="nav-add" onclick="setView('add')">Add Item</button>
+    </nav>
+    <div style="margin-top:14px;display:flex;gap:6px;justify-content:center">
+      <button onclick="exportData()" style="padding:4px 12px;font-size:11px;background:none;border:1px solid #3a2e1e;border-radius:3px;color:var(--ink-3);cursor:pointer;font-family:var(--sans);letter-spacing:0.05em;text-transform:uppercase">Export</button>
+      <button onclick="document.getElementById('import-file').click()" style="padding:4px 12px;font-size:11px;background:none;border:1px solid #3a2e1e;border-radius:3px;color:var(--ink-3);cursor:pointer;font-family:var(--sans);letter-spacing:0.05em;text-transform:uppercase">Import</button>
+      <input type="file" id="import-file" accept="application/json" style="display:none" onchange="importData(event)">
+    </div>
+  </header>
+
+  <main class="main" id="main"></main>
+
+  <div class="edit-overlay hidden" id="edit-overlay" onclick="if(event.target===this)closeEdit()">
+    <div class="edit-modal" id="edit-modal"></div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let items = [];
+let budget = 0;
+let allowance = 0;
+let lastAllowanceMonth = '';
+let view = 'list';
+let confirmingId = null;
+let editingId     = null;
+let buyEarlyId   = null;
+let formCat = '';
+let formPeriod = '2w';
+let timerInterval = null;
+
+// ── State machine ──
+const ST = {
+  WAITING:        'waiting',
+  SNOOZED:        'snoozed',
+  READY:          'ready',
+  PAUSED:         'paused',
+  SKIPPED_BEFORE: 'skipped-before',
+  SKIPPED_AFTER:  'skipped-after',
+  EXPIRED:        'expired',
+  BOUGHT_AFTER:   'bought-after',
+  BOUGHT_BEFORE:  'bought-before',
+  BOUGHT_REGRET:  'bought-regret',
+  DELETED:        'deleted',
+};
+const TERMINAL_STATES = [ST.SKIPPED_BEFORE, ST.SKIPPED_AFTER, ST.EXPIRED, ST.BOUGHT_AFTER, ST.BOUGHT_BEFORE, ST.BOUGHT_REGRET, ST.DELETED];
+const SAVINGS_STATES  = [ST.SKIPPED_BEFORE, ST.SKIPPED_AFTER, ST.EXPIRED];
+const IMPULSE_STATES  = [ST.BOUGHT_BEFORE, ST.BOUGHT_REGRET];
+const RESISTED_STATES = [ST.SKIPPED_BEFORE, ST.SKIPPED_AFTER];
+
+const EXPIRY_GRACE_MS = 30 * 86400000; // 30 days past unlock
+
+function isTerminal(state) { return TERMINAL_STATES.includes(state); }
+function isActive(item) { return !isTerminal(item.state); }
+
+// ═══════════════════════════════════════════════
+//  PERSISTENCE
+// ═══════════════════════════════════════════════
+function load() {
+  try {
+    const raw = localStorage.getItem('waiting-list-v1');
+    if (raw) items = JSON.parse(raw);
+  } catch(_) {}
+  try {
+    const b = localStorage.getItem('waiting-list-budget');
+    if (b != null) budget = parseFloat(b) || 0;
+  } catch(_) {}
+  try {
+    const a = localStorage.getItem('waiting-list-allowance');
+    if (a != null) allowance = parseFloat(a) || 0;
+  } catch(_) {}
+  try {
+    const m = localStorage.getItem('waiting-list-allowance-month');
+    if (m) lastAllowanceMonth = m;
+  } catch(_) {}
+  // Migrate from budgets object back to flat variables if found
+  try {
+    const raw = localStorage.getItem('waiting-list-budgets');
+    if (raw) {
+      const budgets = JSON.parse(raw);
+      if (budgets.hobbies) {
+        budget = budgets.hobbies.budget || 0;
+        allowance = budgets.hobbies.allowance || 0;
+        lastAllowanceMonth = budgets.hobbies.lastAllowanceMonth || '';
+        saveBudget();
+        localStorage.removeItem('waiting-list-budgets');
+      }
+    }
+  } catch(_) {}
+  migrateItems();
+  checkAllowance();
+}
+
+function saveBudget() {
+  try {
+    localStorage.setItem('waiting-list-budget', String(budget));
+    localStorage.setItem('waiting-list-allowance', String(allowance));
+    localStorage.setItem('waiting-list-allowance-month', lastAllowanceMonth);
+  } catch(_) {}
+}
+
+function currentMonth() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+
+function checkAllowance() {
+  if (allowance <= 0) return;
+  const cm = currentMonth();
+  if (lastAllowanceMonth === cm) return;
+
+  if (!lastAllowanceMonth) {
+    budget += allowance;
+    lastAllowanceMonth = cm;
+    saveBudget();
+    return;
+  }
+
+  const [ly, lm] = lastAllowanceMonth.split('-').map(Number);
+  const [cy, cmo] = cm.split('-').map(Number);
+  let months = (cy - ly) * 12 + (cmo - lm);
+  if (months <= 0) return;
+
+  budget += allowance * months;
+  lastAllowanceMonth = cm;
+  saveBudget();
+}
+
+// Convert legacy items (removed/bought/uncounted flags) to the new state model.
+// Runs once per session at load; no-op for items that already have a state field.
+function migrateItems() {
+  let dirty = false;
+  items.forEach(item => {
+    if (item.state) return;
+    if (item.bought) {
+      item.state = ST.BOUGHT_AFTER; // legacy buy flow only allowed after unlock
+      item.resolvedAt = item.boughtAt || Date.now();
+      dirty = true;
+    } else if (item.removed) {
+      const rAt = item.removedAt || Date.now();
+      if (item.uncounted) {
+        item.state = ST.DELETED;
+      } else {
+        item.state = rAt < item.unlocksAt ? ST.SKIPPED_BEFORE : ST.SKIPPED_AFTER;
+      }
+      item.resolvedAt = rAt;
+      dirty = true;
+    }
+  });
+  if (dirty) save();
+}
+
+function checkExpiry() {
+  const now = Date.now();
+  let dirty = false;
+  items.forEach(item => {
+    if (!isActive(item)) return;
+    if (now < item.unlocksAt) return;          // not yet ready
+    if (now - item.unlocksAt > EXPIRY_GRACE_MS) {
+      item.state      = ST.EXPIRED;
+      item.expiredAt  = now;
+      item.resolvedAt = now;
+      dirty = true;
+    }
+  });
+  if (dirty) {
+    save();
+    if (view === 'list') renderList();
+  }
+}
+
+function save() {
+  try { localStorage.setItem('waiting-list-v1', JSON.stringify(items)); } catch(_) {}
+}
+
+function exportData() {
+  const data = localStorage.getItem('waiting-list-v1') || '[]';
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'waiting-list-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error('expected an array of items');
+      if (!confirm('Import ' + data.length + ' items? This will replace your current list.')) return;
+      localStorage.setItem('waiting-list-v1', JSON.stringify(data));
+      items = data;
+      updateNavCount();
+      if (view === 'list') renderList(); else renderAdd();
+      alert('Imported successfully.');
+    } catch(err) {
+      alert('Could not import: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ═══════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtPrice(p) {
+  if (!p && p !== 0) return '';
+  return '$' + parseFloat(p).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function fmtDate(ts) {
+  return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function timeAgo(ts) {
+  const diff = Date.now() - ts;
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  return `${days} days ago`;
+}
+
+function formatCountdown(unlocksAt) {
+  const ms = unlocksAt - Date.now();
+  if (ms <= 0) return null;
+  const totalSecs = Math.floor(ms / 1000);
+  const days  = Math.floor(totalSecs / 86400);
+  const hours = Math.floor((totalSecs % 86400) / 3600);
+  const mins  = Math.floor((totalSecs % 3600) / 60);
+  const secs  = totalSecs % 60;
+  if (days > 1)  return `${days} days, ${hours} hr${hours !== 1 ? 's' : ''}`;
+  if (days === 1) return `1 day, ${hours} hr${hours !== 1 ? 's' : ''}`;
+  if (hours > 0) return `${hours} hr${hours !== 1 ? 's' : ''}, ${mins} min`;
+  if (mins > 0)  return `${mins} min, ${secs} sec`;
+  return `${secs} sec`;
+}
+
+function getProgress(item) {
+  const total = item.unlocksAt - item.createdAt;
+  const elapsed = Date.now() - item.createdAt;
+  return Math.min(1, Math.max(0, elapsed / total));
+}
+
+function isReady(item) { return Date.now() >= item.unlocksAt; }
+
+function getStats() {
+  const active = items.filter(isActive);
+  const waiting = active.filter(i => !isReady(i)).length;
+  const ready   = active.filter(i =>  isReady(i)).length;
+
+  const sumPrices = (states) => items
+    .filter(i => states.includes(i.state) && i.price)
+    .reduce((s, i) => s + parseFloat(i.price), 0);
+
+  const saved   = sumPrices(SAVINGS_STATES);
+  const impulse = sumPrices(IMPULSE_STATES);
+  const netSaved = saved - impulse;
+
+  const resistedCount = items.filter(i => RESISTED_STATES.includes(i.state)).length;
+  const expiredCount  = items.filter(i => i.state === ST.EXPIRED).length;
+  const impulseCount  = items.filter(i => IMPULSE_STATES.includes(i.state)).length;
+
+  const BOUGHT_STATES = [ST.BOUGHT_AFTER, ST.BOUGHT_BEFORE, ST.BOUGHT_REGRET];
+  const totalSpent = sumPrices(BOUGHT_STATES);
+  const budgetRemaining = budget - totalSpent;
+
+  return {
+    waiting, ready, total: active.length,
+    saved, impulse, netSaved,
+    resistedCount, expiredCount, impulseCount,
+    totalSpent, budgetRemaining,
+  };
+}
+
+// ═══════════════════════════════════════════════
+//  ITEM OPERATIONS
+// ═══════════════════════════════════════════════
+function addItem(data) {
+  const ms = data.period === 'debug'
+    ? 20 * 1000
+    : ({ '1w': 7, '2w': 14, '1m': 30 }[data.period] * 86400000);
+  const now = Date.now();
+  items.unshift({
+    id: uid(),
+    name: data.name,
+    price: data.price ? parseFloat(data.price) : null,
+    url: data.url.trim(),
+    category: data.category,
+    notes: data.notes.trim(),
+    period: data.period,
+    createdAt: now,
+    unlocksAt: now + ms,
+    removed: false,
+    bought: false,
+  });
+  save();
+}
+
+function removeItem(id, uncounted) {
+  const item = items.find(i => i.id === id);
+  if (item) {
+    if (uncounted) {
+      item.state = ST.DELETED;
+    } else {
+      item.state = isReady(item) ? ST.SKIPPED_AFTER : ST.SKIPPED_BEFORE;
+    }
+    item.resolvedAt = Date.now();
+    // legacy flags for backward compat with anything else still reading them
+    item.removed = true;
+    item.removedAt = Date.now();
+    item.uncounted = !!uncounted;
+  }
+  confirmingId = null;
+  save();
+  renderList();
+  toast(`"${item?.name}" removed${uncounted ? ' (not counted)' : ''}.`);
+}
+
+function buyItem(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  if (item.url) window.open(item.url, '_blank');
+  item.state      = ST.BOUGHT_AFTER;
+  item.resolvedAt = Date.now();
+  item.bought = true; item.boughtAt = Date.now(); // legacy
+  save();
+  renderList();
+  toast(`Enjoy your purchase! "${item.name}" marked as bought.`);
+}
+
+// Buy an item that's still locked. Asks whether the purchase will be regretted.
+function buyEarly(id, regret) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  if (item.url) window.open(item.url, '_blank');
+  item.state      = regret ? ST.BOUGHT_REGRET : ST.BOUGHT_BEFORE;
+  item.regretted  = !!regret;
+  item.resolvedAt = Date.now();
+  item.bought = true; item.boughtAt = Date.now(); // legacy
+  buyEarlyId = null;
+  save();
+  renderList();
+  toast(regret ? `Logged as an impulse buy.` : `Bought before unlock.`);
+}
+
+function fullyDeleteItem(id) {
+  const item = items.find(i => i.id === id);
+  const name = item?.name;
+  items = items.filter(i => i.id !== id);
+  confirmingId = null;
+  save();
+  updateNavCount();
+  renderList();
+  toast(`"${name}" deleted forever.`);
+}
+
+// ── Budget ──
+function getBudgetInputVal() {
+  const inp = document.getElementById('budget-inp');
+  if (!inp) return 0;
+  const val = parseFloat(inp.value.replace(/[^0-9.\-]/g, ''));
+  return isNaN(val) ? 0 : val;
+}
+
+function adjustBudget(direction) {
+  const amount = getBudgetInputVal();
+  if (amount <= 0) { toast('Enter an amount'); return; }
+  budget += amount * direction;
+  saveBudget();
+  renderList();
+  toast(direction > 0 ? `+${fmtPrice(amount)} added to funds` : `${fmtPrice(amount)} removed from funds`);
+}
+
+function setBudgetDirect() {
+  const amount = getBudgetInputVal();
+  budget = amount;
+  saveBudget();
+  renderList();
+  toast(`Funds set to ${fmtPrice(amount)}`);
+}
+
+function setAllowance() {
+  const inp = document.getElementById('allowance-inp');
+  if (!inp) return;
+  const val = parseFloat(inp.value.replace(/[^0-9.]/g, ''));
+  if (isNaN(val) || val <= 0) { toast('Enter a monthly amount'); return; }
+  allowance = val;
+  if (!lastAllowanceMonth) lastAllowanceMonth = currentMonth();
+  saveBudget();
+  renderList();
+  toast(`Allowance set to ${fmtPrice(val)}/mo`);
+}
+
+function clearAllowance() {
+  allowance = 0;
+  saveBudget();
+  renderList();
+  toast('Monthly allowance turned off');
+}
+
+// ── Edit ──
+function openEdit(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  editingId = id;
+  editCatSelection = item.category || '';
+  const overlay = document.getElementById('edit-overlay');
+  const modal = document.getElementById('edit-modal');
+  modal.innerHTML = `
+    <div class="edit-modal-head">
+      <span class="edit-modal-title">Edit Item</span>
+      <button class="edit-modal-close" onclick="closeEdit()">&#10005;</button>
+    </div>
+    <div class="edit-modal-body">
+      <div class="field">
+        <label class="field-label">Name</label>
+        <input class="field-input" type="text" id="edit-name" value="${esc(item.name)}">
+      </div>
+      <div style="display:flex;gap:12px">
+        <div class="field" style="flex:1">
+          <label class="field-label">Price</label>
+          <input class="field-input" type="text" id="edit-price" value="${item.price != null ? item.price : ''}" placeholder="$0.00">
+        </div>
+        <div class="field" style="flex:2">
+          <label class="field-label">Link / URL</label>
+          <input class="field-input" type="url" id="edit-url" value="${esc(item.url || '')}" placeholder="https://…">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Category</label>
+        <div class="pill-group" id="edit-cat-group">
+          ${CATEGORIES.map(c => `
+            <button type="button" class="pill ${item.category === c ? 'selected' : ''}"
+              onclick="selectEditCat('${c}')">${c}</button>
+          `).join('')}
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Notes</label>
+        <textarea class="field-input" id="edit-notes" rows="3">${esc(item.notes || '')}</textarea>
+      </div>
+    </div>
+    <div class="edit-modal-foot">
+      <button class="edit-btn" onclick="closeEdit()">Cancel</button>
+      <button class="edit-btn primary" onclick="saveEdit()">Save</button>
+    </div>
+  `;
+  overlay.classList.remove('hidden');
+  setTimeout(() => { const inp = document.getElementById('edit-name'); if (inp) inp.focus(); }, 50);
+}
+
+let editCatSelection = '';
+
+function selectEditCat(cat) {
+  editCatSelection = cat;
+  document.querySelectorAll('#edit-cat-group .pill').forEach(btn => {
+    btn.classList.toggle('selected', btn.textContent.trim() === cat);
+  });
+}
+
+function saveEdit() {
+  const item = items.find(i => i.id === editingId);
+  if (!item) return;
+  const nameEl  = document.getElementById('edit-name');
+  const priceEl = document.getElementById('edit-price');
+  const urlEl   = document.getElementById('edit-url');
+  const notesEl = document.getElementById('edit-notes');
+
+  const name = nameEl ? nameEl.value.trim() : '';
+  if (!name) { if (nameEl) nameEl.focus(); return; }
+
+  item.name  = name;
+  item.price = priceEl && priceEl.value ? parseFloat(priceEl.value.replace(/[^0-9.]/g, '')) : null;
+  item.url   = urlEl ? urlEl.value.trim() : '';
+  if (editCatSelection) item.category = editCatSelection;
+  item.notes = notesEl ? notesEl.value.trim() : '';
+
+  save();
+  closeEdit();
+  renderList();
+  toast(`"${name}" updated.`);
+}
+
+function closeEdit() {
+  editingId = null;
+  editCatSelection = '';
+  document.getElementById('edit-overlay').classList.add('hidden');
+}
+
+function snoozeItem(id) {
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  // Extend from whichever is further: now or current unlocksAt
+  const base = Math.max(Date.now(), item.unlocksAt);
+  item.unlocksAt = base + 7 * 86400000;
+  item.state = ST.SNOOZED;
+  save();
+  renderList();
+  toast(`Waiting period extended by one week.`);
+}
+
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════════
+//  VIEW SWITCHING
+// ═══════════════════════════════════════════════
+function setView(v) {
+  view = v;
+  document.getElementById('nav-add').classList.toggle('active', v === 'add');
+  document.getElementById('nav-list').classList.toggle('active', v === 'list');
+  if (v === 'add') renderAdd();
+  else             renderList();
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER: ADD FORM
+// ═══════════════════════════════════════════════
+const CATEGORIES = ['Clothing','Tech','Home','Food','Hobby','Other'];
+const PERIODS = [
+  { id: '1w',    label: 'One Week',    sub: '7 days' },
+  { id: '2w',    label: 'Two Weeks',   sub: '14 days' },
+  { id: '1m',    label: 'One Month',   sub: '30 days' },
+  { id: 'debug', label: 'Debug',       sub: '20 sec' },
+];
+
+function renderAdd() {
+  document.getElementById('main').innerHTML = `
+    <div class="add-form">
+      <div class="form-title">Add to the list</div>
+      <div class="form-subtitle">Give it time. If you still want it, you'll know.</div>
+      <div class="form-rule"></div>
+
+      <div class="field">
+        <label class="field-label" for="f-name">Item name <span>*</span></label>
+        <input class="field-input" id="f-name" type="text" placeholder="What are you considering?" autocomplete="off">
+      </div>
+
+      <div style="display:flex;gap:12px">
+        <div class="field" style="flex:1">
+          <label class="field-label" for="f-price">Price <span>(optional)</span></label>
+          <input class="field-input" id="f-price" type="text" placeholder="$0.00" autocomplete="off">
+        </div>
+        <div class="field" style="flex:2">
+          <label class="field-label" for="f-url">Link / URL <span>(optional)</span></label>
+          <input class="field-input" id="f-url" type="url" placeholder="https://…" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Category</label>
+        <div class="pill-group" id="cat-group">
+          ${CATEGORIES.map(c => `
+            <button class="pill ${formCat === c ? 'selected' : ''}"
+              onclick="selectCat('${c}')">${c}</button>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="f-notes">Why do you want it? <span>(optional)</span></label>
+        <textarea class="field-input" id="f-notes" placeholder="Be honest with yourself…"></textarea>
+      </div>
+
+      <div class="form-rule"></div>
+
+      <div class="field">
+        <label class="field-label">Waiting period</label>
+        <div class="period-group">
+          ${PERIODS.map(p => `
+            <button class="period-btn ${formPeriod === p.id ? 'selected' : ''}"
+              onclick="selectPeriod('${p.id}')">
+              ${p.label}<span class="period-sub">${p.sub}</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="submitForm()">Add to My Waiting List</button>
+    </div>
+  `;
+  document.getElementById('f-name').focus();
+}
+
+function selectCat(cat) {
+  formCat = formCat === cat ? '' : cat;
+  document.querySelectorAll('#cat-group .pill').forEach(btn => {
+    btn.classList.toggle('selected', btn.textContent === formCat);
+  });
+}
+
+function selectPeriod(p) {
+  formPeriod = p;
+  document.querySelectorAll('.period-btn').forEach(btn => {
+    btn.classList.toggle('selected', btn.onclick.toString().includes(`'${p}'`));
+  });
+}
+
+function submitForm() {
+  const nameEl = document.getElementById('f-name');
+  const name   = nameEl.value.trim();
+  if (!name) {
+    nameEl.classList.add('error');
+    nameEl.focus();
+    nameEl.addEventListener('input', () => nameEl.classList.remove('error'), { once: true });
+    return;
+  }
+  addItem({
+    name,
+    price: document.getElementById('f-price').value.replace(/[^0-9.]/g,''),
+    url:   document.getElementById('f-url').value,
+    category: formCat,
+    notes: document.getElementById('f-notes').value,
+    period: formPeriod,
+  });
+  updateNavCount();
+  toast(`"${name}" added. The waiting begins.`);
+  setView('list');
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER: LIST
+// ═══════════════════════════════════════════════
+function renderList() {
+  const active = items.filter(i => !i.removed && !i.bought);
+  const ready  = active.filter(i =>  isReady(i));
+  const locked = active.filter(i => !isReady(i));
+  const stats  = getStats();
+
+  const negative = stats.netSaved < 0;
+  const netVal   = stats.netSaved === 0 ? '—' : fmtPrice(Math.abs(stats.netSaved));
+  const breakdown = `${fmtPrice(stats.saved || 0)} saved − ${fmtPrice(stats.impulse || 0)} impulse = ${negative ? '−' : ''}${fmtPrice(Math.abs(stats.netSaved || 0))} net`;
+
+  const fundsNeg = stats.budgetRemaining < 0;
+  const detailParts = [];
+  if (budget > 0) detailParts.push(`<strong>${fmtPrice(budget)}</strong> total funds`);
+  if (stats.totalSpent > 0) detailParts.push(`<strong>${fmtPrice(stats.totalSpent)}</strong> spent`);
+  if (allowance > 0) detailParts.push(`<strong>${fmtPrice(allowance)}</strong>/mo allowance`);
+
+  const budgetHtml = `
+    <div class="funds-card">
+      <div class="funds-header">
+        <span class="funds-label">Available Funds</span>
+      </div>
+      <div class="funds-amount ${fundsNeg ? 'negative' : ''}">${fmtPrice(stats.budgetRemaining)}</div>
+      ${detailParts.length > 0 ? `<div class="funds-detail">${detailParts.join(' &ensp;&middot;&ensp; ')}</div>` : ''}
+
+      <div class="funds-divider"></div>
+
+      <div class="funds-row">
+        <span class="funds-row-label">Adjust</span>
+        <input class="funds-inp" type="text" id="budget-inp" placeholder="$0">
+        <button class="funds-btn add" onclick="adjustBudget(1)">+ Add</button>
+        <button class="funds-btn remove" onclick="adjustBudget(-1)">- Remove</button>
+        <button class="funds-btn" onclick="setBudgetDirect()" title="Set total funds to this amount">Set total</button>
+      </div>
+
+      <div class="funds-row">
+        <span class="funds-row-label">Allowance</span>
+        ${allowance > 0
+          ? `<span class="funds-allowance-active">${fmtPrice(allowance)}/mo</span>`
+          : `<span class="funds-allowance-off">Not set</span>`}
+        <input class="funds-inp" type="text" id="allowance-inp" placeholder="$/mo" style="width:70px" value="${allowance > 0 ? allowance : ''}">
+        <button class="funds-btn" onclick="setAllowance()">Set</button>
+        ${allowance > 0 ? `<button class="funds-btn remove" onclick="clearAllowance()">Off</button>` : ''}
+      </div>
+    </div>
+  `;
+
+  const statsHtml = `
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-value">${stats.waiting}</span>
+        <span class="stat-label">Waiting</span>
+      </div>
+      <div class="stat stat-ready">
+        <span class="stat-value">${stats.ready}</span>
+        <span class="stat-label">Ready</span>
+      </div>
+      <div class="stat stat-net ${negative ? 'is-negative' : ''}" title="${breakdown}">
+        <span class="stat-value">${netVal}</span>
+        <span class="stat-label">${negative ? 'Net Overspent' : 'Net Saved'}</span>
+      </div>
+    </div>
+    <div class="stat-detail">
+      <span><strong>${stats.resistedCount}</strong> resisted</span>
+      <span class="stat-detail-sep">·</span>
+      <span><strong>${stats.expiredCount}</strong> expired</span>
+      <span class="stat-detail-sep">·</span>
+      <span><strong>${stats.impulseCount}</strong> impulse buy${stats.impulseCount === 1 ? '' : 's'}</span>
+    </div>
+  `;
+
+  const readyHtml = ready.length > 0 ? `
+    <div class="section-head">
+      <span class="section-head-label" style="color:var(--olive)">Ready to buy</span>
+      <span class="section-head-line"></span>
+    </div>
+    ${ready.map(i => itemCard(i)).join('')}
+  ` : '';
+
+  const lockedHtml = locked.length > 0 ? `
+    <div class="section-head" style="${ready.length > 0 ? 'margin-top:32px' : ''}">
+      <span class="section-head-label">Still waiting</span>
+      <span class="section-head-line"></span>
+    </div>
+    ${locked.map(i => itemCard(i)).join('')}
+  ` : '';
+
+  const history = items
+    .filter(i => isTerminal(i.state))
+    .sort((a, b) => (b.resolvedAt || 0) - (a.resolvedAt || 0));
+
+  const historyHtml = history.length > 0 ? `
+    <div class="section-head" style="${(ready.length || locked.length) ? 'margin-top:32px' : ''}">
+      <span class="section-head-label">History</span>
+      <span class="section-head-line"></span>
+    </div>
+    ${history.map(i => historyCard(i)).join('')}
+  ` : '';
+
+  const emptyHtml = active.length === 0 && history.length === 0 ? `
+    <div class="empty">
+      <div class="empty-icon">&#9676;</div>
+      <div class="empty-title">Your list is empty</div>
+      <div class="empty-hint">Add something you're considering and let time do the work.</div>
+    </div>
+  ` : '';
+
+  document.getElementById('main').innerHTML = budgetHtml + statsHtml + readyHtml + lockedHtml + historyHtml + emptyHtml;
+  startTimer();
+}
+
+function historyCard(item) {
+  const when = fmtDate(item.resolvedAt || Date.now());
+  const priceTxt = item.price ? `<strong>${fmtPrice(item.price)}</strong> · ` : '';
+  let iconClass, iconChar, statusText;
+  switch (item.state) {
+    case ST.BOUGHT_AFTER:
+      iconClass = 'bought';
+      iconChar = '✓';
+      statusText = `Bought after unlock${item.price ? ' · ' + fmtPrice(item.price) : ''} · ${when}`;
+      break;
+    case ST.BOUGHT_BEFORE:
+      iconClass = 'removed';
+      iconChar = '!';
+      statusText = `Bought early · ${when}`;
+      break;
+    case ST.BOUGHT_REGRET:
+      iconClass = 'removed';
+      iconChar = '!';
+      statusText = `Bought early, regretted · ${when}`;
+      break;
+    case ST.SKIPPED_BEFORE:
+      iconClass = 'bought';
+      iconChar = '✕';
+      statusText = `Skipped before unlock · ${when}`;
+      break;
+    case ST.SKIPPED_AFTER:
+      iconClass = 'bought';
+      iconChar = '✕';
+      statusText = `Skipped after unlock · ${when}`;
+      break;
+    case ST.EXPIRED:
+      iconClass = 'bought';
+      iconChar = '⌛';
+      statusText = `Expired · ${fmtDate(item.expiredAt || item.resolvedAt || Date.now())}`;
+      break;
+    case ST.DELETED:
+      iconClass = 'uncounted';
+      iconChar = '✕';
+      statusText = `Deleted, not counted · ${when}`;
+      break;
+    default:
+      return '';
+  }
+  return `
+    <div class="history-card">
+      <div class="history-icon ${iconClass}">${iconChar}</div>
+      <div class="history-info">
+        <div class="history-name">${esc(item.name)}</div>
+        <div class="history-meta">${priceTxt}${statusText}</div>
+      </div>
+      <button class="history-delete" onclick="fullyDeleteItem('${item.id}')" title="Delete forever">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </div>
+  `;
+}
+
+function itemCard(item) {
+  const ready    = isReady(item);
+  const progress = getProgress(item);
+  const countdown = ready ? null : formatCountdown(item.unlocksAt);
+  const isConfirming = confirmingId === item.id;
+
+  const sealIcon = ready
+    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`
+    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+
+  const progressHtml = !ready ? `
+    <div class="item-progress-wrap">
+      <div class="item-progress-track">
+        <div class="item-progress-fill" id="prog-${item.id}" style="width:${(progress*100).toFixed(1)}%"></div>
+      </div>
+      <div class="item-time">
+        <strong data-unlock="${item.unlocksAt}" id="cd-${item.id}">${countdown}</strong> remaining
+        &ensp;·&ensp; unlocks ${fmtDate(item.unlocksAt)}
+      </div>
+    </div>
+  ` : '';
+
+  const readyLabelHtml = ready ? `
+    <div class="item-ready-label">
+      <span class="item-ready-dot"></span>
+      Ready &mdash; unlocked ${timeAgo(item.unlocksAt)}
+    </div>
+  ` : '';
+
+  const notesHtml = item.notes ? `
+    <div class="item-notes">${esc(item.notes)}</div>
+  ` : '';
+
+  const buyBtn = item.url
+    ? `<a class="act-btn act-buy" href="${esc(item.url)}" target="_blank" rel="noopener" onclick="markBought('${item.id}')">Buy It &rarr;</a>`
+    : `<button class="act-btn act-buy" onclick="buyItem('${item.id}')">Mark as Bought</button>`;
+
+  const isPromptingBuyEarly = buyEarlyId === item.id;
+
+  const actionsHtml = `
+    <div class="item-actions">
+      ${ready ? buyBtn : `
+        <button class="act-btn act-snooze" onclick="snoozeItem('${item.id}')">+ One More Week</button>
+        <button class="act-btn act-remove" onclick="askBuyEarly('${item.id}')">Buy Now</button>
+      `}
+      <div class="item-actions-right">
+        ${ready && item.url ? `<a class="act-btn act-url" href="${esc(item.url)}" target="_blank" rel="noopener">Visit Store</a>` : ''}
+        <button class="act-btn act-snooze" onclick="openEdit('${item.id}')">Edit</button>
+        <button class="act-btn act-remove" onclick="askRemove('${item.id}')">Remove</button>
+      </div>
+    </div>
+    ${isPromptingBuyEarly ? `
+      <div class="confirm-inline" style="flex-wrap:wrap">
+        <span class="confirm-inline-text" style="flex-basis:100%;margin-bottom:6px">Buying before the wait is up. Be honest — is this an impulse you'll regret?</span>
+        <button class="confirm-no"  onclick="cancelBuyEarly()">Cancel</button>
+        <button class="confirm-no"  onclick="buyEarly('${item.id}', false)">No regret</button>
+        <button class="confirm-yes" onclick="buyEarly('${item.id}', true)">Yes, regret</button>
+      </div>
+    ` : ''}
+    ${isConfirming ? (item.price ? `
+      <div class="confirm-inline" style="flex-wrap:wrap">
+        <span class="confirm-inline-text" style="flex-basis:100%;margin-bottom:6px">Remove this item? Should the price count toward your held back total?</span>
+        <button class="confirm-no"  onclick="cancelRemove()">Keep</button>
+        <button class="confirm-no"  onclick="removeItem('${item.id}', true)">Don't count</button>
+        <button class="confirm-yes" onclick="removeItem('${item.id}', false)">Count it</button>
+        <button class="confirm-delete" onclick="fullyDeleteItem('${item.id}')">Fully delete</button>
+      </div>
+    ` : `
+      <div class="confirm-inline" style="flex-wrap:wrap">
+        <span class="confirm-inline-text">Remove this item?</span>
+        <button class="confirm-no"  onclick="cancelRemove()">Keep</button>
+        <button class="confirm-yes" onclick="removeItem('${item.id}', false)">Remove</button>
+        <button class="confirm-delete" onclick="fullyDeleteItem('${item.id}')">Fully delete</button>
+      </div>
+    `) : ''}
+  `;
+
+  return `
+    <div class="item-card ${ready ? 'is-ready' : 'is-locked'}" id="card-${item.id}">
+      <div class="item-top">
+        <div class="item-seal">${sealIcon}</div>
+        <div class="item-main">
+          <div class="item-name">${esc(item.name)}</div>
+          <div class="item-meta">
+            ${item.price ? `<span class="item-price">${fmtPrice(item.price)}</span>` : ''}
+            ${item.category ? `<span class="item-category">${esc(item.category)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      ${progressHtml}
+      ${readyLabelHtml}
+      ${notesHtml}
+      ${actionsHtml}
+    </div>
+  `;
+}
+
+function markBought(id) {
+  // Called when clicking the "Buy It" anchor — mark as bought without re-navigating in JS
+  setTimeout(() => {
+    const item = items.find(i => i.id === id);
+    if (item) { item.bought = true; item.boughtAt = Date.now(); save(); renderList(); }
+  }, 300);
+}
+
+function askRemove(id) {
+  confirmingId = id;
+  renderList();
+}
+
+function cancelRemove() {
+  confirmingId = null;
+  renderList();
+}
+
+function askBuyEarly(id) {
+  buyEarlyId = id;
+  renderList();
+}
+
+function cancelBuyEarly() {
+  buyEarlyId = null;
+  renderList();
+}
+
+// ═══════════════════════════════════════════════
+//  COUNTDOWN TIMER
+// ═══════════════════════════════════════════════
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    let anyJustUnlocked = false;
+
+    document.querySelectorAll('[data-unlock]').forEach(el => {
+      const unlocksAt = parseInt(el.dataset.unlock);
+      if (Date.now() >= unlocksAt) {
+        anyJustUnlocked = true;
+      } else {
+        el.textContent = formatCountdown(unlocksAt);
+      }
+    });
+
+    document.querySelectorAll('[id^="prog-"]').forEach(el => {
+      const id = el.id.replace('prog-', '');
+      const item = items.find(i => i.id === id);
+      if (item) {
+        el.style.width = (getProgress(item) * 100).toFixed(2) + '%';
+      }
+    });
+
+    if (anyJustUnlocked) {
+      clearInterval(timerInterval);
+      renderList();
+    }
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════
+//  NAV COUNT
+// ═══════════════════════════════════════════════
+function updateNavCount() {
+  const active = items.filter(isActive).length;
+  const el = document.getElementById('nav-count');
+  if (active > 0) { el.textContent = active; el.style.display = ''; }
+  else el.style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+load();
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && editingId) closeEdit(); });
+checkExpiry();
+setInterval(checkExpiry, 86400000); // daily tick
+updateNavCount();
+renderList();
+</script>
+</body>
+</html>
